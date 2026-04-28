@@ -7,6 +7,9 @@ IMAGE_PATH = "../zdjecia/kilka.jpg"
 OUTPUT_DIR = "../pieces"
 MIN_AREA = 2000
 
+pieces = [] # tablica puzzli
+
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
@@ -66,6 +69,8 @@ for c in contours:
 
     piece = cv2.bitwise_and(orig, orig, mask=piece_mask)
     crop = piece[y:y+h, x:x+w]
+
+    pieces.append(crop)
 
     out_path = os.path.join(OUTPUT_DIR, f"piece_{count:02d}.png")
     cv2.imwrite(out_path, crop)
