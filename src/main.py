@@ -6,6 +6,6 @@ if __name__ == '__main__':
     # Required for Windows/frozen executables
     freeze_support()
     jigsaw_solver = JigsawSolver()
-    jigsaw_solver.get_puzzle_data()
+    jigsaw_solver.solve()
 
 

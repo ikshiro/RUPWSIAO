@@ -76,6 +76,7 @@ class PuzzleDetector:
         for pred_mask in outputs['instances'].pred_masks:
             mask = pred_mask.numpy().astype('uint8')
             contour, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+            contours.append(contour[0][0])
         return contours
     
 
