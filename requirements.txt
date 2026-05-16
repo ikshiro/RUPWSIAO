@@ -20,5 +20,6 @@ nvidia-nvjitlink
 nvidia-nvshmem-cu13
 nvidia-nvtx
 opencv-python==4.13.0.92
+Pillow
 torch==2.11.0
 torchvision==0.26.0
