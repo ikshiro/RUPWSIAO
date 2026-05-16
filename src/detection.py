@@ -1,23 +1,17 @@
-import copy
-import random
-
 import detectron2
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor, DefaultTrainer
 from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
-from detectron2.data import DatasetMapper, MetadataCatalog, DatasetCatalog, build_detection_train_loader
+from detectron2.data import DatasetMapper, MetadataCatalog, build_detection_train_loader
 from detectron2.data.datasets import register_coco_instances
 from detectron2.data import transforms as T
-from detectron2.data import detection_utils as utils
-
-import torch, cv2, os
-import numpy as np
+import cv2, os
 import datetime
 
 
-IMAGE_PATH = "zdjecia/puzzle2.jpg"
-OUTPUT_DIR = "pieces"
+IMAGE_PATH = "zdjecia/puzzle.jpg"
+DATASET_NAME = "puzzle_train"
 
 
 class PuzzleDetector:
@@ -25,15 +19,21 @@ class PuzzleDetector:
     cfg: detectron2.config.CfgNode
     model_path: str
 
-    def register_database(self):
-        register_coco_instances("puzzle_train", {}, "puzzle_database/puzzle.json", "puzzle_database")
+
+    def __init__(self):
+        self._register_database()
+        self._create_config()
+
+
+    def _register_database(self):
+        register_coco_instances(DATASET_NAME, {}, "puzzle_database/puzzle.json", "puzzle_database")
     
 
-    def create_config(self):
+    def _create_config(self):
         self.cfg = get_cfg()
-        self.cfg.MODEL.DEVICE='cuda'
+        self.cfg.MODEL.DEVICE='cpu'
         self.cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-        self.cfg.DATASETS.TRAIN = ("puzzle_train",)
+        self.cfg.DATASETS.TRAIN = (DATASET_NAME,)
         self.cfg.DATASETS.TEST = ()
         self.cfg.DATALOADER.NUM_WORKERS = 2
         self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
@@ -46,14 +46,38 @@ class PuzzleDetector:
         self.cfg.RANDOM_FLIP = "horizontal"
 
 
-    def data_augmentation(self):
+    def _data_augmentation(self):
         augs = [
         T.RandomBrightness(0.8, 1.2),
         T.RandomFlip(prob=0.5),
         T.RandomFlip(prob=0.5, horizontal=False, vertical=True),
-        #T.RandomCrop("absolute", (640, 640))
         ]
         return augs
+    
+
+    def _show_predictions(self, outputs, img):
+        puzzle_metadata = MetadataCatalog.get(DATASET_NAME)
+        visualizer = Visualizer(img[:, :, ::-1], metadata=puzzle_metadata, scale=0.5)
+        out = visualizer.draw_instance_predictions(outputs["instances"].to("cpu"))
+        cv2.imshow("Predicted puzzles", out.get_image()[:, :, ::-1])
+        cv2.waitKey()
+
+
+    def predict(self, show_predictions = False):
+        #self.cfg.MODEL.WEIGHTS = os.path.join(self.cfg.OUTPUT_DIR, "model_final.pth")  # path to the model we just trained
+        self.cfg.MODEL.WEIGHTS = "./output/2026-05-14-14-21-49/model_final.pth"
+        self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set a custom testing threshold
+        predictor = DefaultPredictor(self.cfg)
+        img = cv2.imread(IMAGE_PATH)
+        outputs = predictor(img)
+        if show_predictions:
+            self._show_predictions(outputs, img)
+        contours = []
+        for pred_mask in outputs['instances'].pred_masks:
+            mask = pred_mask.numpy().astype('uint8')
+            contour, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        return contours
+    
 
     def train(self):
         now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -63,22 +87,9 @@ class PuzzleDetector:
         trainer = DefaultTrainer(self.cfg) 
         dataloader = build_detection_train_loader(self.cfg,
             mapper=DatasetMapper(self.cfg, is_train=True, augmentations=
-                self.data_augmentation())
+                self._data_augmentation())
         )
         trainer.build_train_loader = dataloader
         trainer.resume_or_load(resume=False)
         trainer.train()
 
-
-    def predict(self):
-        #self.cfg.MODEL.WEIGHTS = os.path.join(self.cfg.OUTPUT_DIR, "model_final.pth")  # path to the model we just trained
-        self.cfg.MODEL.WEIGHTS = "./output\\2026-05-14-14-21-49\model_final.pth"
-        self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set a custom testing threshold
-        predictor = DefaultPredictor(self.cfg)
-        puzzle_metadata = MetadataCatalog.get("puzzle_train")
-        img = cv2.imread(IMAGE_PATH)
-        outputs = predictor(img)
-        visualizer = Visualizer(img[:, :, ::-1], metadata=puzzle_metadata, scale=0.5)
-        out = visualizer.draw_instance_predictions(outputs["instances"].to("cpu"))
-        cv2.imshow("Predicted puzzles", out.get_image()[:, :, ::-1])
-        cv2.waitKey()
