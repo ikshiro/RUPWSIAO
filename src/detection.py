@@ -73,11 +73,13 @@ class PuzzleDetector:
         if show_predictions:
             self._show_predictions(outputs, img)
         contours = []
-        for pred_mask in outputs['instances'].pred_masks:
-            mask = pred_mask.numpy().astype('uint8')
+        boxes = []
+        for i in range (len(outputs['instances'])):
+            mask = outputs['instances'].pred_masks[i].numpy().astype('uint8')
             contour, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-            contours.append(contour[0][0])
-        return contours
+            contours.append(contour[0])
+            boxes.append(outputs['instances'].pred_boxes[i])
+        return contours, boxes
     
 
     def train(self):
