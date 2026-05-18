@@ -6,7 +6,7 @@ from numpy.linalg import LinAlgError
 from scipy import ndimage
 
 
-IMAGE_PATH = "zdjecia/puzzle.jpg"
+IMAGE_PATH = "zdjecia/kilka.jpg"
 
 
 class EdgeType(Enum):
@@ -29,10 +29,11 @@ class Puzzle:
 
 
     def __init__(self, mask, box, debug):
-        contour, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contour = max(contour, key=cv2.contourArea)
         self.debug = debug
         self.box = box.tensor.numpy()[0]
-        self._rotate_to_right_angle(contour[0])
+        self._rotate_to_right_angle(contour)
         self._add_edges_types(mask)
 
 
@@ -88,14 +89,14 @@ class Puzzle:
         hit_left = self._check_hits(rotated, False, False)
         hit_right = self._check_hits(rotated, False, True)
         
-        self.edges_types["up"] = EdgeType.FEMALE if hit_up/max_x > 0.4 else EdgeType.MALE
-        self.edges_types["down"] = EdgeType.FEMALE if hit_down/max_x > 0.4 else EdgeType.MALE
-        self.edges_types["left"] = EdgeType.FEMALE if hit_left/max_y > 0.4 else EdgeType.MALE
-        self.edges_types["right"] = EdgeType.FEMALE if hit_right/max_y > 0.4 else EdgeType.MALE
+        self._change_puzzle_type(hit_up/max_x, "up")
+        self._change_puzzle_type(hit_down/max_x, "down")
+        self._change_puzzle_type(hit_left/max_y, "left")
+        self._change_puzzle_type(hit_right/max_y, "right")
 
         print(self.edges_types)
         self._show_image()
-
+    
 
     def _check_hits(self, img, if_x, if_end):
         height = int(self.box[3] - self.box[1])
@@ -116,6 +117,16 @@ class Puzzle:
                         hit += 1
             offset += const_offset
         return hit
+
+
+    def _change_puzzle_type(self, ratio, side):
+        THRESHOLD = 0.4
+        THRESHOLD_EDGE = 0.8
+
+        if ratio > THRESHOLD_EDGE:
+            self.edges_types[side] = EdgeType.FLAT
+        else:
+            self.edges_types[side] = EdgeType.FEMALE if ratio > THRESHOLD else EdgeType.MALE
 
 
     def _show_image(self):

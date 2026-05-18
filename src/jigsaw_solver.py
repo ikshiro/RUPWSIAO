@@ -17,6 +17,6 @@ class JigsawSolver:
 
     def _get_puzzle_data(self):
         masks, boxes = self.puzzle_detector.predict()
-        for i in range(5):
+        for i in range(len(masks)):
             puzzle = Puzzle(masks[i], boxes[i], False)
             self.puzzles.append(puzzle)
