@@ -6,34 +6,35 @@ from numpy.linalg import LinAlgError
 from scipy import ndimage
 
 
-IMAGE_PATH = "zdjecia/kilka.jpg"
+IMAGE_PATH = "zdjecia/puzzle.jpg"
 
 
 class EdgeType(Enum):
-    FLAT = 0,
-    FEMALE = 1,
-    MALE = 2,
+    FLAT = 0
+    FEMALE = 1
+    MALE = 2
     UNDEFINED = 3
 
 
 class Puzzle:
-    data = []
-    edges_types = {
-        "left": EdgeType.UNDEFINED,
-        "right": EdgeType.UNDEFINED,
-        "up": EdgeType.UNDEFINED,
-        "down": EdgeType.UNDEFINED}
-    rotation = 0.0
-    box = []
-    rotated_image = []
-
 
     def __init__(self, mask, box):
+        self.data = []
+        self.edges_types = {
+            "left": EdgeType.UNDEFINED,
+            "right": EdgeType.UNDEFINED,
+            "up": EdgeType.UNDEFINED,
+            "down": EdgeType.UNDEFINED}
+        self.rotation = 0.0
+        self.box = []
+        self.rotated_image = []
+
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contour = max(contour, key=cv2.contourArea)
-        self.box = box.tensor.numpy()[0]
+        self.box = box.tensor.numpy()[0]        
         self._rotate_to_right_angle(contour)
         self._add_edges_types(mask)
+    
 
 
     def _rotate_to_right_angle(self, contour):
@@ -70,7 +71,8 @@ class Puzzle:
         if y_distance == 0:
             self.rotation = 0.0
         else:
-            self.rotate(math.tan(x_distance / y_distance))
+            self.rotation = math.tan(x_distance / y_distance)
+            self.fix_rotation()
 
 
     def _add_edges_types(self, mask):
@@ -96,7 +98,10 @@ class Puzzle:
         img = cv2.imread(IMAGE_PATH)
         cropped_image = img[int(self.box[1]):int(self.box[3]), int(self.box[0]):int(self.box[2])]
         self.rotated_image = ndimage.rotate(cropped_image, -math.degrees(self.rotation), reshape=False)
-        self._show_image()
+
+        # print(self.edges_types)
+        # self.show()
+
     
 
     def _check_hits(self, img, if_x, if_end):
@@ -133,13 +138,14 @@ class Puzzle:
             self.edges_types[side] = EdgeType.FEMALE if ratio > THRESHOLD else EdgeType.MALE
 
 
-    def _show_image(self):
+    def show(self):
         cv2.imshow("Puzzle rotated", self.rotated_image)
         cv2.waitKey()
     
 
     def compare(self, puzzle) -> bool:
         return self._compare_colors(puzzle) > 0.9
+
 
     def _compare_colors(self, puzzle):
         best_score = 0.0
@@ -197,7 +203,21 @@ class Puzzle:
 
 
     def rotate(self, rotation):
+        times = int(rotation/math.pi/2)
         self.rotation += rotation
+        self.fix_rotation()
+        self.rotated_image = ndimage.rotate(self.rotated_image, -math.degrees(self.rotation), reshape=False)
+
+        for _ in range(times):
+            new_edges_types = {
+                "left": self.edges_types["down"],
+                "right": self.edges_types["up"],
+                "up": self.edges_types["left"],
+                "down": self.edges_types["right"]}
+            self.edges_types = new_edges_types
+    
+
+    def fix_rotation(self):
         if self.rotation > math.pi:
             self.rotation = math.pi - self.rotation
 
