@@ -28,6 +28,7 @@ class Puzzle:
         self.rotation = 0.0
         self.box = []
         self.rotated_image = []
+        self.position = (None, None) # row, column
 
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contour = max(contour, key=cv2.contourArea)
@@ -35,6 +36,9 @@ class Puzzle:
         self._rotate_to_right_angle(contour)
         self._add_edges_types(mask)
     
+
+    def set_position(self, x, y):
+        self.position = (x, y)
 
 
     def _rotate_to_right_angle(self, contour):
@@ -143,11 +147,7 @@ class Puzzle:
         cv2.waitKey()
     
 
-    def compare(self, puzzle) -> bool:
-        return self._compare_colors(puzzle) > 0.9
-
-
-    def _compare_colors(self, puzzle):
+    def compare(self, puzzle, side):
         best_score = 0.0
 
         opposite = {
@@ -157,16 +157,16 @@ class Puzzle:
             "down": "up"
         }
 
-        for side in self.edges_types:
-
-            other_side = opposite[side]
-            if self.edges_types[side] == puzzle.edges_types[other_side]:
-                continue
-
-            if EdgeType.FLAT in (
+        if EdgeType.FLAT in (
                 self.edges_types[side],
                 puzzle.edges_types[other_side]
             ):
+                return
+
+        for i in range(4):
+
+            other_side = opposite[side]
+            if self.edges_types[side] == puzzle.edges_types[other_side]:
                 continue
 
             edge1 = self._extract_edge(self.rotated_image, side)
@@ -184,9 +184,13 @@ class Puzzle:
 
             similarity = 1.0 - np.mean(diff) / 255.0
             best_score = max(best_score, similarity)
+            if best_score > 0.9:
+                break
+            puzzle.rotate(90)
 
         return best_score
     
+
     def _extract_edge(self, img, side, thickness=5):
         h, w = img.shape[:2]
 
@@ -202,7 +206,7 @@ class Puzzle:
         return np.mean(edge, axis=1 if side in ["left", "right"] else 0)
 
 
-    def rotate(self, rotation):
+    def rotate(self, rotation): # rotation in degrees
         times = int(rotation/math.pi/2)
         self.rotation += rotation
         self.fix_rotation()
