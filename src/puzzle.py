@@ -25,13 +25,12 @@ class Puzzle:
         "down": EdgeType.UNDEFINED}
     rotation = 0.0
     box = []
-    debug = False
+    rotated_image = []
 
 
-    def __init__(self, mask, box, debug):
+    def __init__(self, mask, box):
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contour = max(contour, key=cv2.contourArea)
-        self.debug = debug
         self.box = box.tensor.numpy()[0]
         self._rotate_to_right_angle(contour)
         self._add_edges_types(mask)
@@ -71,7 +70,7 @@ class Puzzle:
         if y_distance == 0:
             self.rotation = 0.0
         else:
-            self.rotation = math.tan(x_distance / y_distance)
+            self.rotate(math.tan(x_distance / y_distance))
 
 
     def _add_edges_types(self, mask):
@@ -94,7 +93,9 @@ class Puzzle:
         self._change_puzzle_type(hit_left/max_y, "left")
         self._change_puzzle_type(hit_right/max_y, "right")
 
-        print(self.edges_types)
+        img = cv2.imread(IMAGE_PATH)
+        cropped_image = img[int(self.box[1]):int(self.box[3]), int(self.box[0]):int(self.box[2])]
+        self.rotated_image = ndimage.rotate(cropped_image, -math.degrees(self.rotation), reshape=False)
         self._show_image()
     
 
@@ -108,13 +109,16 @@ class Puzzle:
         offset = const_offset
         
         while hit == 0:
-            for i in range(range_max):
-                if if_x:
-                    if img[range_max2-offset if if_end else offset][i]:
-                        hit += 1
-                else:
-                    if img[i][range_max2-offset if if_end else offset]:
-                        hit += 1
+            idx = range_max2 - offset if if_end else offset
+
+            arr = img[idx, :] if if_x else img[:, idx]
+            hit = sum(arr)
+            changes = np.diff(np.concatenate(([0], arr, [0])))
+
+            starts = np.where(changes == 1)[0]
+            ends = np.where(changes == -1)[0]
+
+            lengths = ends - starts
             offset += const_offset
         return hit
 
@@ -130,13 +134,73 @@ class Puzzle:
 
 
     def _show_image(self):
-        img = cv2.imread(IMAGE_PATH)
-        cropped_image = img[int(self.box[1]):int(self.box[3]), int(self.box[0]):int(self.box[2])]
-        rotated = ndimage.rotate(cropped_image, -math.degrees(self.rotation), reshape=False)
-        cv2.imshow("Puzzle rotated", rotated)
-        cv2.imshow("Puzzle", cropped_image)
+        cv2.imshow("Puzzle rotated", self.rotated_image)
         cv2.waitKey()
-        
+    
+
+    def compare(self, puzzle) -> bool:
+        return self._compare_colors(puzzle) > 0.9
+
+    def _compare_colors(self, puzzle):
+        best_score = 0.0
+
+        opposite = {
+            "left": "right",
+            "right": "left",
+            "up": "down",
+            "down": "up"
+        }
+
+        for side in self.edges_types:
+
+            other_side = opposite[side]
+            if self.edges_types[side] == puzzle.edges_types[other_side]:
+                continue
+
+            if EdgeType.FLAT in (
+                self.edges_types[side],
+                puzzle.edges_types[other_side]
+            ):
+                continue
+
+            edge1 = self._extract_edge(self.rotated_image, side)
+            edge2 = puzzle._extract_edge(puzzle.rotated_image, other_side)
+            edge2 = np.flip(edge2, axis=0)
+            min_len = min(len(edge1), len(edge2))
+            edge1 = edge1[:min_len]
+            edge2 = edge2[:min_len]
+
+            diff = np.linalg.norm(
+                edge1.astype(np.float32) -
+                edge2.astype(np.float32),
+                axis=1
+            )
+
+            similarity = 1.0 - np.mean(diff) / 255.0
+            best_score = max(best_score, similarity)
+
+        return best_score
+    
+    def _extract_edge(self, img, side, thickness=5):
+        h, w = img.shape[:2]
+
+        if side == "left":
+            edge = img[:, :thickness]
+        elif side == "right":
+            edge = img[:, w-thickness:w]
+        elif side == "up":
+            edge = img[:thickness, :]
+        else:
+            edge = img[h-thickness:h, :]
+
+        return np.mean(edge, axis=1 if side in ["left", "right"] else 0)
+
+
+    def rotate(self, rotation):
+        self.rotation += rotation
+        if self.rotation > math.pi:
+            self.rotation = math.pi - self.rotation
+
 
 
 def get_solution(p1, p2):
