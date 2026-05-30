@@ -59,7 +59,7 @@ def vacuum_off(f):
     f.write("M8\n")
 
 def rotate(f, z_in):
-    f.write(f"M10 S{int(z_in)}\n")
+    f.write(f"G0 Z{z_in}\n")
 
 def move_to(f, x, y):
     f.write(f"G1 X{x} Y{y}\n")
