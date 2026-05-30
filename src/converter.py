@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math
 GCODE_PATH = "run.gcode"
 
 # everything in milimeters
@@ -10,18 +11,18 @@ FULL_PUZZLE_WIDTH = 270
 PUZZLE_HEIGHT = 200 / 5
 PUZZLE_WIDTH = 270 / 6
 WORK_AREA = np.array([
-    [0, 0],
-    [HEIGHT, 0],
-    [0, WIDTH],
-    [HEIGHT, WIDTH]
+    [0, 0],         # bottom left
+    [HEIGHT, 0],    # bottom right
+    [0, WIDTH],     # top left
+    [HEIGHT, WIDTH] # top right
 ], dtype=np.float32)
 
 # in pixels
 WORK_AREA_P = np.array([
-    [514, 870],   # dl
-    [1302, 874],  # rl
-    [507, 138],   # tl
-    [1315, 141]   # tr
+    [514, 870],   # bottom left
+    [1302, 874],  # bottom right
+    [507, 138],   # top left
+    [1315, 141]   # top right
 ], dtype=np.float32)
 
 PERSPECTIVE = cv2.getPerspectiveTransform(WORK_AREA_P, WORK_AREA)
@@ -57,6 +58,9 @@ def vacuum_on(f):
 def vacuum_off(f):
     f.write("M8\n")
 
+def rotate(f, z_in):
+    f.write(f"M10 S{int(z_in)}\n")
+
 def move_to(f, x, y):
     f.write(f"G1 X{x} Y{y}\n")
 
@@ -64,9 +68,10 @@ def convert_to_gcode(positions_in, positions_out):
     coords_in = get_coordinates(positions_in)
     coords_out = get_coordinates(positions_out)
     with open(GCODE_PATH, "w") as f:
-        for (x_in, y_in), (x_out, y_out) in zip(coords_in, coords_out):
+        for (x_in, y_in, z_in), (x_out, y_out) in zip(coords_in, coords_out):
             if ( not (0 <= x_in <= WIDTH and 0 <= y_in <= HEIGHT)):
                 continue
+            z_in = math.degrees(z_in)
 
             move_to(f, x_in, y_in)
 
@@ -76,6 +81,8 @@ def convert_to_gcode(positions_in, positions_out):
 
             move_to(f, x_out, y_out)
 
+            rotate(f, z_in)
             lower(f)
             vacuum_off(f)
             lift(f)
+            rotate(f, -z_in)
