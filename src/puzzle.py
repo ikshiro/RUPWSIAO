@@ -23,14 +23,16 @@ class Puzzle:
             "up": EdgeType.UNDEFINED,
             "down": EdgeType.UNDEFINED}
         self.rotation = 0.0
-        self.box = []
+        self.box = box.tensor.numpy()[0]
+        self.center = box.get_centers().numpy()[0]
         self.rotated_image = []
         self.position = (None, None) # row, column
         self.path = path
 
+        print(self.center)
+
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        contour = max(contour, key=cv2.contourArea)
-        self.box = box.tensor.numpy()[0]        
+        contour = max(contour, key=cv2.contourArea)    
         self._rotate_to_right_angle(contour)
         self._add_edges_types(mask)
     
