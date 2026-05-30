@@ -5,6 +5,7 @@ from puzzle import Puzzle
 from puzzle import EdgeType
 import numpy as np
 import copy
+import converter
 
 
 
@@ -79,6 +80,13 @@ class JigsawSolver:
                 else:
                     side = "up"
                     inspected_puzzle = copy.copy(self.completed_puzzles[-inspected_puzzle.position[0]-1])
+        
+
+        positions_in = [puzzle.center for puzzle in self.completed_puzzles]
+        positions_out = [puzzle.position for puzzle in self.completed_puzzles]
+        coords_in = converter.get_coordinates_from_img(positions_in)
+        coords_out = converter.get_coordinates(positions_out)
+        converter.convert_to_gcode(coords_in, coords_out)
                   
 
 

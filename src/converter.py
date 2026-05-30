@@ -6,7 +6,7 @@ PUZZLE = 40
 
 
 
-def get_coordinates_from_img():
+def get_coordinates_from_img(positions):
     pass
 
 
