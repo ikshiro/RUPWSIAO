@@ -6,9 +6,6 @@ from numpy.linalg import LinAlgError
 from scipy import ndimage
 
 
-IMAGE_PATH = "zdjecia/kilka.jpg"
-
-
 class EdgeType(Enum):
     FLAT = 0
     FEMALE = 1
@@ -18,7 +15,7 @@ class EdgeType(Enum):
 
 class Puzzle:
 
-    def __init__(self, mask, box):
+    def __init__(self, mask, box, path):
         self.data = []
         self.edges_types = {
             "left": EdgeType.UNDEFINED,
@@ -29,6 +26,7 @@ class Puzzle:
         self.box = []
         self.rotated_image = []
         self.position = (None, None) # row, column
+        self.path = path
 
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contour = max(contour, key=cv2.contourArea)
@@ -99,7 +97,7 @@ class Puzzle:
         self._change_puzzle_type(hit_left/max_y, "left")
         self._change_puzzle_type(hit_right/max_y, "right")
 
-        img = cv2.imread(IMAGE_PATH)
+        img = cv2.imread(self.path)
         cropped_image = img[int(self.box[1]):int(self.box[3]), int(self.box[0]):int(self.box[2])]
         self.rotated_image = ndimage.rotate(cropped_image, -math.degrees(self.rotation), reshape=False)
 

@@ -10,7 +10,6 @@ import cv2, os
 import datetime
 
 
-IMAGE_PATH = "zdjecia/kilka.jpg"
 DATASET_NAME = "puzzle_train"
 
 
@@ -20,9 +19,10 @@ class PuzzleDetector:
     model_path: str
 
 
-    def __init__(self):
+    def __init__(self, path):
         self._register_database()
         self._create_config()
+        self.path = path
 
 
     def _register_database(self):
@@ -68,7 +68,7 @@ class PuzzleDetector:
         self.cfg.MODEL.WEIGHTS = "./output/2026-05-14-14-21-49/model_final.pth"
         self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set a custom testing threshold
         predictor = DefaultPredictor(self.cfg)
-        img = cv2.imread(IMAGE_PATH)
+        img = cv2.imread(self.path)
         outputs = predictor(img)
         if show_predictions:
             self._show_predictions(outputs, img)

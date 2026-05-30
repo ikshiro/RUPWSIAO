@@ -7,13 +7,14 @@ import numpy as np
 import copy
 
 
-IMAGE_PATH = "zdjecia/kilka.jpg"
-
 
 class JigsawSolver:
-    puzzle_detector = PuzzleDetector()
-    puzzles = []
-    completed_puzzles = []
+
+    def __init__(self, path):
+        self.path = path
+        self.puzzle_detector = PuzzleDetector(path)
+        self.puzzles = []
+        self.completed_puzzles = []
 
 
     def solve(self):
@@ -84,6 +85,6 @@ class JigsawSolver:
     def _get_puzzle_data(self):
         masks, boxes = self.puzzle_detector.predict()
         for i in range(len(masks)):
-            puzzle = Puzzle(masks[i], boxes[i])
+            puzzle = Puzzle(masks[i], boxes[i], self.path)
             self.puzzles.append(puzzle)
     
