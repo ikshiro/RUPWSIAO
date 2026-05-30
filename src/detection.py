@@ -10,7 +10,7 @@ import cv2, os
 import datetime
 
 
-IMAGE_PATH = "zdjecia/puzzle.jpg"
+IMAGE_PATH = "zdjecia/kilka.jpg"
 DATASET_NAME = "puzzle_train"
 
 

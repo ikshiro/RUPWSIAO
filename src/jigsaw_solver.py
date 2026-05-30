@@ -7,48 +7,78 @@ import numpy as np
 import copy
 
 
-IMAGE_PATH = "zdjecia/puzzle.jpg"
+IMAGE_PATH = "zdjecia/kilka.jpg"
 
 
 class JigsawSolver:
     puzzle_detector = PuzzleDetector()
     puzzles = []
-    grid = []
+    completed_puzzles = []
 
 
     def solve(self):
         self._get_puzzle_data()
 
-        puzzles_placed = 0
         puzzles_number = len(self.puzzles)
 
         corner_pairs = [
-            ("down", "left")
+            ("down", "left"),
             ("up", "left"),
             ("up", "right"),
-            ("down", "right"),
+            ("down", "right")
         ]
 
-        start_puzzle: Puzzle = None
+        inspected_puzzle: Puzzle = None
 
-        for puzzle in self.puzzles:
+        for j in range(len(self.puzzles)):
+            puzzle = self.puzzles[j]
             i = 0
-            print(puzzle.edges_types)
             for side1, side2 in corner_pairs:
                 if (
                     puzzle.edges_types[side1] == EdgeType.FLAT and
                     puzzle.edges_types[side2] == EdgeType.FLAT
                 ):
-                    start_puzzle = copy.copy(puzzle)
+                    inspected_puzzle = self.puzzles.pop(j)
+                    inspected_puzzle.set_position((0, 0))
+                    self.completed_puzzles.append(copy.copy(inspected_puzzle))
                     break
                 i += 1
 
                 
-            if start_puzzle is not None:
-                puzzles_placed += 1
-                start_puzzle.rotate(i*math.pi/2)
+            if inspected_puzzle is not None:
+                inspected_puzzle.rotate(i*math.pi/2)
                 break
 
+        directions = {
+            "left": (-1,0),
+            "right": (1,0),
+            "up": (0,1),
+            "down": (0,-1)
+        }
+        side = "right"
+
+        while len(self.completed_puzzles) != puzzles_number:
+            best_score = 0.0
+            for j in range(len(self.puzzles)):
+                puzzle = self.puzzles[j]
+                similarity = inspected_puzzle.compare(puzzle, side)
+                if similarity >= best_score:
+                    best_score = similarity
+
+                if best_score > 0.7:
+                    puzzle.set_position(inspected_puzzle.position + directions[side])
+                    inspected_puzzle = self.puzzles.pop(j)
+                    self.completed_puzzles.append(copy.copy(inspected_puzzle)) 
+                    break
+            
+
+            if best_score <= 0.7:
+                if side == "up":
+                    break
+                else:
+                    side = "up"
+                    inspected_puzzle = copy.copy(self.completed_puzzles[-inspected_puzzle.position[0]-1])
+                  
 
 
     def _get_puzzle_data(self):

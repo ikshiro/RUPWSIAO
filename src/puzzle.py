@@ -6,7 +6,7 @@ from numpy.linalg import LinAlgError
 from scipy import ndimage
 
 
-IMAGE_PATH = "zdjecia/puzzle.jpg"
+IMAGE_PATH = "zdjecia/kilka.jpg"
 
 
 class EdgeType(Enum):
@@ -37,8 +37,8 @@ class Puzzle:
         self._add_edges_types(mask)
     
 
-    def set_position(self, x, y):
-        self.position = (x, y)
+    def set_position(self, coords):
+        self.position = coords
 
 
     def _rotate_to_right_angle(self, contour):
@@ -157,11 +157,6 @@ class Puzzle:
             "down": "up"
         }
 
-        if EdgeType.FLAT in (
-                self.edges_types[side],
-                puzzle.edges_types[other_side]
-            ):
-                return
 
         for i in range(4):
 
