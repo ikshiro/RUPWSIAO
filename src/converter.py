@@ -45,7 +45,6 @@ def get_coordinates(positions):
         coordinates.append((x, y))
     return coordinates
 
-
 # gcode
 def lift(f):
     f.write("M3 S55\n")
