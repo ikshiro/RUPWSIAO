@@ -34,6 +34,7 @@ def get_coordinates_from_img(positions):
         mm = cv2.perspectiveTransform(p, PERSPECTIVE)
         x = mm[0, 0, 0]
         y = mm[0, 0, 1]
+    return positions
 
 
 def get_coordinates(positions):
@@ -42,6 +43,7 @@ def get_coordinates(positions):
         x = col * PUZZLE_WIDTH + PUZZLE_WIDTH / 2
         y = row * PUZZLE_HEIGHT + PUZZLE_HEIGHT / 2
         coordinates.append((x, y))
+    return positions
 
 
 # gcode
