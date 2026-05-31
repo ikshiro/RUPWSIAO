@@ -26,8 +26,15 @@ class Puzzle:
         self.box = box.tensor.numpy()[0]
         self.center = box.get_centers().numpy()[0]
         self.rotated_image = []
-        self.position = (None, None) # row, column
+        self.position = (0, 0) # row, column
+        self.puzzle_edges = {
+            "left": False,
+            "right": False,
+            "up": False,
+            "down": False
+        }
         self.path = path
+        self.is_placed = False
 
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contour = max(contour, key=cv2.contourArea)    
@@ -141,7 +148,8 @@ class Puzzle:
 
 
     def show(self):
-        cv2.imshow("Puzzle rotated", self.rotated_image)
+        string = str(self.position[0]) + " " + str(self.position[1])
+        cv2.imshow(string, self.rotated_image)
         cv2.waitKey()
     
 
@@ -159,8 +167,8 @@ class Puzzle:
         for i in range(4):
 
             other_side = opposite[side]
-            if self.edges_types[side] == puzzle.edges_types[other_side]:
-                continue
+            # if self.edges_types[side] == puzzle.edges_types[other_side]:
+            #     continue
 
             edge1 = self._extract_edge(self.rotated_image, side)
             edge2 = puzzle._extract_edge(puzzle.rotated_image, other_side)
@@ -216,6 +224,14 @@ class Puzzle:
 
     def fix_rotation(self):
         self.rotation = (self.rotation + math.pi) % (2 * math.pi) - math.pi
+    
+
+    def is_puzzle_attached(self, side):
+        return self.puzzle_edges[side] is not None
+    
+
+    def attach_puzzle(self, side, puzzle_idx):
+        self.puzzle_edges[side] = puzzle_idx
 
 
 

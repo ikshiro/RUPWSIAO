@@ -1,5 +1,7 @@
 import math
 
+import cv2
+
 from detection import PuzzleDetector
 from puzzle import Puzzle
 from puzzle import EdgeType
@@ -23,70 +25,72 @@ class JigsawSolver:
 
         puzzles_number = len(self.puzzles)
 
-        corner_pairs = [
-            ("down", "left"),
-            ("up", "left"),
-            ("up", "right"),
-            ("down", "right")
-        ]
 
-        inspected_puzzle: Puzzle = None
-
-        for j in range(len(self.puzzles)):
-            puzzle = self.puzzles[j]
-            i = 0
-            for side1, side2 in corner_pairs:
-                if (
-                    puzzle.edges_types[side1] == EdgeType.FLAT and
-                    puzzle.edges_types[side2] == EdgeType.FLAT
-                ):
-                    inspected_puzzle = self.puzzles.pop(j)
-                    inspected_puzzle.set_position((0, 0))
-                    self.completed_puzzles.append(copy.copy(inspected_puzzle))
-                    break
-                i += 1
-
-                
-            if inspected_puzzle is not None:
-                inspected_puzzle.rotate(i*math.pi/2)
-                break
-
-        if inspected_puzzle is None:
-            inspected_puzzle = self.puzzles[0]
-            
+                    
         directions = {
             "left": (-1,0),
             "right": (1,0),
             "up": (0,1),
             "down": (0,-1)
         }
-        side = "right"
+        # col * puzzles_number + row
+        puzzle_hashmap = {
+            0: True
+        }
 
-        while len(self.completed_puzzles) != puzzles_number:
-            best_score = 0.0
-            for j in range(len(self.puzzles)):
-                puzzle = self.puzzles[j]
-                similarity = inspected_puzzle.compare(puzzle, side)
-                if similarity >= best_score:
-                    best_score = similarity
+        placed_puzzles = 1
+        self.puzzles[0].is_placed = True
 
-                if best_score > 0.7:
-                    puzzle.set_position((inspected_puzzle.position[0] + directions[side][0], inspected_puzzle.position[1] + directions[side][1]))
-                    inspected_puzzle = self.puzzles.pop(j)
-                    self.completed_puzzles.append(copy.copy(inspected_puzzle)) 
+        while placed_puzzles != puzzles_number:
+            for inspected_puzzle in self.puzzles:
+                if not inspected_puzzle.is_placed:
+                    continue
+                for side in inspected_puzzle.puzzle_edges.keys():
+
+                    if self.get_position_hash(
+                        inspected_puzzle.position[0] + directions[side][0],
+                        inspected_puzzle.position[1] + directions[side][1]) in puzzle_hashmap:
+                        inspected_puzzle.puzzle_edges[side] = True
+                        continue
+                    
+                    best_score = 0
+                    best_index = None
+                    for j, puzzle in enumerate(self.puzzles):
+                        if puzzle.is_placed:
+                            continue
+                        
+                        similarity = inspected_puzzle.compare(puzzle, side)
+
+                        if similarity > best_score:
+                            best_score = similarity
+                            best_index = j
+                    if best_index == None:
+                        break
+
+                    puzzle = self.puzzles[best_index]
+                    puzzle.is_placed = True
+                    position = (
+                        inspected_puzzle.position[0] + directions[side][0],
+                        inspected_puzzle.position[1] + directions[side][1]
+                    )
+                    puzzle.set_position(position)
+                    puzzle_hashmap[self.get_position_hash(position[0], position[1])] = True
+                    
+
+                    puzzle_hashmap
+                    placed_puzzles += 1
+                
+                if placed_puzzles == puzzles_number:
                     break
-            
 
-            if best_score <= 0.7:
-                if side == "up":
-                    break
-                else:
-                    side = "up"
-                    inspected_puzzle = copy.copy(self.completed_puzzles[-inspected_puzzle.position[0]-1])
-        
 
-        positions_in = [(puzzle.center, puzzle.rotation) for puzzle in self.completed_puzzles]
-        positions_out = [puzzle.position for puzzle in self.completed_puzzles]
+        positions_in = [(puzzle.center, puzzle.rotation) for puzzle in self.puzzles]
+        positions_out = [puzzle.position for puzzle in self.puzzles]
+        for piece in self.puzzles:
+            print(piece.position)
+            #piece.show()
+
+
         converter.convert_to_gcode(positions_in, positions_out)
                   
 
@@ -97,3 +101,6 @@ class JigsawSolver:
             puzzle = Puzzle(masks[i], boxes[i], self.path)
             self.puzzles.append(puzzle)
     
+
+    def get_position_hash(self, col, row):
+        return col*len(self.puzzles)+row
