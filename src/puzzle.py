@@ -29,8 +29,6 @@ class Puzzle:
         self.position = (None, None) # row, column
         self.path = path
 
-        print(self.center)
-
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contour = max(contour, key=cv2.contourArea)    
         self._rotate_to_right_angle(contour)
