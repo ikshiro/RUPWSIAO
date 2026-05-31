@@ -38,7 +38,7 @@ def get_coordinates(positions):
     coordinates = []
     for row, col in positions:
         x = col * PUZZLE_WIDTH + PUZZLE_WIDTH / 2
-        y = row * 3.5 / 2
+        y = row * 35 / 2
         coordinates.append((x, y))
     return coordinates
 
