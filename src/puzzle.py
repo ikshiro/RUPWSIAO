@@ -24,7 +24,7 @@ class Puzzle:
             "down": EdgeType.UNDEFINED}
         self.rotation = 0.0
         self.box = box.tensor.numpy()[0]
-        self.center = box.get_centers().numpy()[0]
+        self.center = (box.get_centers().numpy()[0][0], box.get_centers().numpy()[0][1])
         self.rotated_image = []
         self.position = (0, 0) # row, column
         self.puzzle_edges = {
