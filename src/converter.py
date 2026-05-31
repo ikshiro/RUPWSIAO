@@ -75,4 +75,4 @@ def convert_to_gcode(positions_in, positions_out):
             rotate(f, z_in)
             lower(f)
             lift(f)
-            rotate(f, -z_in)
+            rotate(f, 0)
