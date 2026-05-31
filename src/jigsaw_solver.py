@@ -68,7 +68,7 @@ class JigsawSolver:
                     best_score = similarity
 
                 if best_score > 0.7:
-                    puzzle.set_position(inspected_puzzle.position + directions[side])
+                    puzzle.set_position((inspected_puzzle.position[0] + directions[side][0], inspected_puzzle.position[1] + directions[side][1]))
                     inspected_puzzle = self.puzzles.pop(j)
                     self.completed_puzzles.append(copy.copy(inspected_puzzle)) 
                     break
