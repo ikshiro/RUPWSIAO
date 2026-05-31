@@ -26,10 +26,12 @@ SY = HEIGHT / HEIGHT_PX
 
 
 def get_coordinates_from_img(positions):
+    coordinates = []
     for (x, y), z in positions:
-        x = (x - 507) * SX
-        y = (y - 138) * SY
-    return positions
+        xc = (x - 507) * SX
+        yc = (y - 138) * SY
+        coordinates.append((xc, yc), z)
+    return coordinates
 
 
 def get_coordinates(positions):
@@ -59,7 +61,7 @@ def convert_to_gcode(positions_in, positions_out):
     coords_out = get_coordinates(positions_out)
     with open(GCODE_PATH, "w") as f:
         for ((x_in, y_in), z_in), (x_out, y_out) in zip(coords_in, coords_out):
-            if ( not (0 <= x_in <= WIDTH and 0 <= y_in <= HEIGHT)):
+            if not (0 <= x_in <= WIDTH and 0 <= y_in <= HEIGHT):
                 continue
             z_in = math.degrees(z_in)
 
