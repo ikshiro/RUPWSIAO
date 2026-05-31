@@ -45,16 +45,18 @@ def get_coordinates(positions):
 # gcode
 def lift(f):
     f.write("M3 S70\n")
-    f.write("M5\n")
 
 def lower(f):
     f.write("M3 S149\n")
+    f.write(f"G4 P1")
 
 def rotate(f, z_in):
     f.write(f"G0 Z{int(z_in)}\n")
+    f.write(f"G4 P1")
 
 def move_to(f, x, y):
     f.write(f"G1 X{int(x)} Y{int(y)}\n")
+    f.write(f"G4 P1")
 
 def convert_to_gcode(positions_in, positions_out):
     coords_in = get_coordinates_from_img(positions_in)
