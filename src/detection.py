@@ -11,6 +11,7 @@ import datetime
 
 
 DATASET_NAME = "puzzle_train"
+SCORE_THRESHOLD = 0.99
 
 
 class PuzzleDetector:
@@ -75,6 +76,8 @@ class PuzzleDetector:
         masks = []
         boxes = []
         for i in range (len(outputs['instances'])):
+            if outputs['instances'].scores[i] < SCORE_THRESHOLD:
+                continue
             mask = outputs['instances'].pred_masks[i].numpy().astype('uint8')
             mask = cv2.GaussianBlur(mask, (5,5), 0)
             masks.append(mask)
