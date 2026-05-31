@@ -67,12 +67,12 @@ def convert_to_gcode(positions_in, positions_out):
                 continue
             z_in = math.degrees(z_in)
 
-            move_to(f, x_in, y_in)
+            move_to(f, -y_in, -x_in)
 
             lower(f)
             lift(f)
 
-            move_to(f, x_out, y_out)
+            move_to(f, -y_in, -x_in)
 
             rotate(f, z_in)
             lower(f)
