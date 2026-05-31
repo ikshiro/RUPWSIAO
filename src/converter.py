@@ -27,9 +27,8 @@ WORK_AREA_P = np.array([
 
 PERSPECTIVE = cv2.getPerspectiveTransform(WORK_AREA_P, WORK_AREA)
 
-
 def get_coordinates_from_img(positions):
-    for x, y in positions:
+    for (x, y), z in positions:
         p = np.array([[[x, y]]], dtype=np.float32)
         mm = cv2.perspectiveTransform(p, PERSPECTIVE)
         x = mm[0, 0, 0]
@@ -69,7 +68,7 @@ def convert_to_gcode(positions_in, positions_out):
     coords_in = get_coordinates_from_img(positions_in)
     coords_out = get_coordinates(positions_out)
     with open(GCODE_PATH, "w") as f:
-        for (x_in, y_in, z_in), (x_out, y_out) in zip(coords_in, coords_out):
+        for ((x_in, y_in), z_in), (x_out, y_out) in zip(coords_in, coords_out):
             if ( not (0 <= x_in <= WIDTH and 0 <= y_in <= HEIGHT)):
                 continue
             z_in = math.degrees(z_in)
