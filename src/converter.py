@@ -11,6 +11,12 @@ FULL_PUZZLE_WIDTH = 270
 PUZZLE_HEIGHT = 200 / 5
 PUZZLE_WIDTH = 270 / 6
 
+# grid corners:
+# 514, 870  - bottom left
+# 1302, 874 - bottom right
+# 507, 138  - top left
+# 1315, 141 - top right
+
 # in pixels
 WIDTH_PX  = ((1302-514) + (1315-507)) / 2
 HEIGHT_PX = ((870-138) + (874-141)) / 2
@@ -21,8 +27,8 @@ SY = HEIGHT / HEIGHT_PX
 
 def get_coordinates_from_img(positions):
     for (x, y), z in positions:
-        x = (x - 510.5) * SX
-        y = (870 - y) * SY
+        x = (x - 507) * SX
+        y = (y - 138) * SY
     return positions
 
 
