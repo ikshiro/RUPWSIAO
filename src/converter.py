@@ -25,11 +25,36 @@ SX = WIDTH / WIDTH_PX
 SY = HEIGHT / HEIGHT_PX
 
 
+# corners in pixels
+src = np.array([
+    [514, 870],
+    [1302, 874],
+    [507, 138],
+    [1315, 141]
+], dtype=np.float32)
+
+# corners in mm
+dst = np.array([
+    [0,   0],
+    [345, 0],
+    [0,   380],
+    [345, 380]
+], dtype=np.float32)
+
+H = cv2.getPerspectiveTransform(src, dst)
+
+
 def get_coordinates_from_img(positions):
     coordinates = []
     for (x, y), z in positions:
-        xc = (x - 507) * SX
-        yc = (y - 138) * SY
+
+        p = np.array([[[x, y]]], dtype=np.float32)
+        mm = cv2.perspectiveTransform(p, H)
+        xc = mm[0, 0, 0]
+        yc = mm[0, 0, 1]
+
+        #xc = (x - 507) * SX
+        #yc = (y - 138) * SY
         coordinates.append(((xc, yc), z))
     return coordinates
 
