@@ -10,20 +10,8 @@ FULL_PUZZLE_HEIGHT = 200
 FULL_PUZZLE_WIDTH = 270
 PUZZLE_HEIGHT = 200 / 5
 PUZZLE_WIDTH = 270 / 6
-WORK_AREA = np.array([
-    [0, 0],         # bottom left
-    [HEIGHT, 0],    # bottom right
-    [0, WIDTH],     # top left
-    [HEIGHT, WIDTH] # top right
-], dtype=np.float32)
 
 # in pixels
-WORK_AREA_P = np.array([
-    [514, 870],   # bottom left
-    [1302, 874],  # bottom right
-    [507, 138],   # top left
-    [1315, 141]   # top right
-], dtype=np.float32)
 WIDTH_PX  = ((1302-514) + (1315-507)) / 2
 HEIGHT_PX = ((870-138) + (874-141)) / 2
 
