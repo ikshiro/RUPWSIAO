@@ -24,15 +24,17 @@ WORK_AREA_P = np.array([
     [507, 138],   # top left
     [1315, 141]   # top right
 ], dtype=np.float32)
+WIDTH_PX  = ((1302-514) + (1315-507)) / 2
+HEIGHT_PX = ((870-138) + (874-141)) / 2
 
-PERSPECTIVE = cv2.getPerspectiveTransform(WORK_AREA_P, WORK_AREA)
+SX = WIDTH / WIDTH_PX
+SY = HEIGHT / HEIGHT_PX
+
 
 def get_coordinates_from_img(positions):
     for (x, y), z in positions:
-        p = np.array([[[x, y]]], dtype=np.float32)
-        mm = cv2.perspectiveTransform(p, PERSPECTIVE)
-        x = mm[0, 0, 0]
-        y = mm[0, 0, 1]
+        x = (x - 510.5) * SX
+        y = (870 - y) * SY
     return positions
 
 
