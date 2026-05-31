@@ -64,6 +64,10 @@ def convert_to_gcode(positions_in, positions_out):
             if not (0 <= x_in <= WIDTH and 0 <= y_in <= HEIGHT):
                 continue
             z_in = math.degrees(z_in)
+            
+            # off center
+            x_in = x_in - 10
+            y_in = y_in - 57
 
             move_to(f, x_in, y_in)
 
