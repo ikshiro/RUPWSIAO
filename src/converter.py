@@ -46,17 +46,11 @@ def get_coordinates(positions):
 
 # gcode
 def lift(f):
-    f.write("M3 S55\n")
+    f.write("M3 S70\n")
     f.write("M5\n")
 
 def lower(f):
     f.write("M3 S149\n")
-
-def vacuum_on(f):
-    f.write("M9\n")
-
-def vacuum_off(f):
-    f.write("M8\n")
 
 def rotate(f, z_in):
     f.write(f"G0 Z{z_in}\n")
@@ -76,13 +70,11 @@ def convert_to_gcode(positions_in, positions_out):
             move_to(f, x_in, y_in)
 
             lower(f)
-            vacuum_on(f)
             lift(f)
 
             move_to(f, x_out, y_out)
 
             rotate(f, z_in)
             lower(f)
-            vacuum_off(f)
             lift(f)
             rotate(f, -z_in)
