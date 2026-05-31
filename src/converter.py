@@ -4,7 +4,7 @@ import math
 GCODE_PATH = "run.gcode"
 
 # everything in milimeters
-HEIGHT = 380
+HEIGHT = 344
 WIDTH = 345
 FULL_PUZZLE_HEIGHT = 200
 FULL_PUZZLE_WIDTH = 270
@@ -68,7 +68,7 @@ def convert_to_gcode(positions_in, positions_out):
             z_in = math.degrees(z_in)
             
             # off center
-            x_in = x_in - 10
+            x_in = x_in - 24
             y_in = y_in - 57
 
             move_to(f, x_in, y_in)
@@ -78,7 +78,7 @@ def convert_to_gcode(positions_in, positions_out):
 
             move_to(f, x_out, y_out)
 
-            rotate(f, z_in)
+            #rotate(f, z_in)
             lower(f)
             lift(f)
-            rotate(f, 0)
+            #rotate(f, 0)
