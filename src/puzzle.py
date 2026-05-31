@@ -215,8 +215,7 @@ class Puzzle:
     
 
     def fix_rotation(self):
-        if self.rotation > math.pi:
-            self.rotation = math.pi - self.rotation
+        self.rotation = (self.rotation + math.pi) % (2 * math.pi) - math.pi
 
 
 
