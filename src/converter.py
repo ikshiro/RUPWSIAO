@@ -4,8 +4,8 @@ import math
 GCODE_PATH = "run.gcode"
 
 # everything in milimeters
-HEIGHT = 345
-WIDTH = 380
+HEIGHT = 380
+WIDTH = 345
 FULL_PUZZLE_HEIGHT = 200
 FULL_PUZZLE_WIDTH = 270
 PUZZLE_HEIGHT = 200 / 5
@@ -67,12 +67,12 @@ def convert_to_gcode(positions_in, positions_out):
                 continue
             z_in = math.degrees(z_in)
 
-            move_to(f, -y_in, -x_in)
+            move_to(f, x_in, y_in)
 
             lower(f)
             lift(f)
 
-            move_to(f, -y_in, -x_in)
+            move_to(f, x_out, y_out)
 
             rotate(f, z_in)
             lower(f)
