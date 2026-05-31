@@ -48,7 +48,7 @@ def lift(f):
 
 def lower(f):
     f.write("M3 S149\n")
-    f.write(f"G4 P1\n")
+    f.write(f"G4 P2\n")
 
 def rotate(f, z_in):
     f.write(f"G0 Z{int(z_in)}\n")
