@@ -6,9 +6,6 @@ from numpy.linalg import LinAlgError
 from scipy import ndimage
 
 
-IMAGE_PATH = "zdjecia/puzzle.jpg"
-
-
 class EdgeType(Enum):
     FLAT = 0
     FEMALE = 1
@@ -18,7 +15,7 @@ class EdgeType(Enum):
 
 class Puzzle:
 
-    def __init__(self, mask, box):
+    def __init__(self, mask, box, path):
         self.data = []
         self.edges_types = {
             "left": EdgeType.UNDEFINED,
@@ -26,15 +23,22 @@ class Puzzle:
             "up": EdgeType.UNDEFINED,
             "down": EdgeType.UNDEFINED}
         self.rotation = 0.0
-        self.box = []
+        self.box = box.tensor.numpy()[0]
+        self.center = box.get_centers().numpy()[0]
         self.rotated_image = []
+        self.position = (None, None) # row, column
+        self.path = path
+
+        print(self.center)
 
         contour, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        contour = max(contour, key=cv2.contourArea)
-        self.box = box.tensor.numpy()[0]        
+        contour = max(contour, key=cv2.contourArea)    
         self._rotate_to_right_angle(contour)
         self._add_edges_types(mask)
     
+
+    def set_position(self, coords):
+        self.position = coords
 
 
     def _rotate_to_right_angle(self, contour):
@@ -95,7 +99,7 @@ class Puzzle:
         self._change_puzzle_type(hit_left/max_y, "left")
         self._change_puzzle_type(hit_right/max_y, "right")
 
-        img = cv2.imread(IMAGE_PATH)
+        img = cv2.imread(self.path)
         cropped_image = img[int(self.box[1]):int(self.box[3]), int(self.box[0]):int(self.box[2])]
         self.rotated_image = ndimage.rotate(cropped_image, -math.degrees(self.rotation), reshape=False)
 
@@ -143,11 +147,7 @@ class Puzzle:
         cv2.waitKey()
     
 
-    def compare(self, puzzle) -> bool:
-        return self._compare_colors(puzzle) > 0.9
-
-
-    def _compare_colors(self, puzzle):
+    def compare(self, puzzle, side):
         best_score = 0.0
 
         opposite = {
@@ -157,16 +157,11 @@ class Puzzle:
             "down": "up"
         }
 
-        for side in self.edges_types:
+
+        for i in range(4):
 
             other_side = opposite[side]
             if self.edges_types[side] == puzzle.edges_types[other_side]:
-                continue
-
-            if EdgeType.FLAT in (
-                self.edges_types[side],
-                puzzle.edges_types[other_side]
-            ):
                 continue
 
             edge1 = self._extract_edge(self.rotated_image, side)
@@ -184,9 +179,13 @@ class Puzzle:
 
             similarity = 1.0 - np.mean(diff) / 255.0
             best_score = max(best_score, similarity)
+            if best_score > 0.9:
+                break
+            puzzle.rotate(90)
 
         return best_score
     
+
     def _extract_edge(self, img, side, thickness=5):
         h, w = img.shape[:2]
 
@@ -202,7 +201,7 @@ class Puzzle:
         return np.mean(edge, axis=1 if side in ["left", "right"] else 0)
 
 
-    def rotate(self, rotation):
+    def rotate(self, rotation): # rotation in degrees
         times = int(rotation/math.pi/2)
         self.rotation += rotation
         self.fix_rotation()
