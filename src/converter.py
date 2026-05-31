@@ -30,7 +30,7 @@ def get_coordinates_from_img(positions):
     for (x, y), z in positions:
         xc = (x - 507) * SX
         yc = (y - 138) * SY
-        coordinates.append((xc, yc), z)
+        coordinates.append(((xc, yc), z))
     return coordinates
 
 
