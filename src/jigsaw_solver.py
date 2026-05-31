@@ -86,10 +86,12 @@ class JigsawSolver:
 
         positions_in = [(puzzle.center, puzzle.rotation) for puzzle in self.puzzles]
         positions_out = [puzzle.position for puzzle in self.puzzles]
-        for piece in self.puzzles:
-            print(piece.position)
-            #piece.show()
-
+        min_x = min(x for x, y in positions_out)
+        min_y = min(y for x, y in positions_out)
+        positions_out = [
+            (x + abs(min_x), y + abs(min_y))
+            for x, y in positions_out
+        ]
 
         converter.convert_to_gcode(positions_in, positions_out)
                   
