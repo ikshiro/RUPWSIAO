@@ -51,6 +51,9 @@ class JigsawSolver:
                 inspected_puzzle.rotate(i*math.pi/2)
                 break
 
+        if inspected_puzzle is None:
+            inspected_puzzle = self.puzzles[0]
+            
         directions = {
             "left": (-1,0),
             "right": (1,0),
