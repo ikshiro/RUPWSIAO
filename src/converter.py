@@ -34,6 +34,7 @@ def get_coordinates_from_img(positions):
         mm = cv2.perspectiveTransform(p, PERSPECTIVE)
         x = mm[0, 0, 0]
         y = mm[0, 0, 1]
+    return positions
 
 
 def get_coordinates(positions):
@@ -42,6 +43,7 @@ def get_coordinates(positions):
         x = col * PUZZLE_WIDTH + PUZZLE_WIDTH / 2
         y = row * PUZZLE_HEIGHT + PUZZLE_HEIGHT / 2
         coordinates.append((x, y))
+    return coordinates
 
 
 # gcode
@@ -65,7 +67,7 @@ def move_to(f, x, y):
     f.write(f"G1 X{x} Y{y}\n")
 
 def convert_to_gcode(positions_in, positions_out):
-    coords_in = get_coordinates(positions_in)
+    coords_in = get_coordinates_from_img(positions_in)
     coords_out = get_coordinates(positions_out)
     with open(GCODE_PATH, "w") as f:
         for (x_in, y_in, z_in), (x_out, y_out) in zip(coords_in, coords_out):
